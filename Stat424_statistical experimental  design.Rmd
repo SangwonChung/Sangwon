@@ -1,0 +1,204 @@
+---
+title: "HW4 STAT424"
+author: "Sangwon Chung"
+date: "3/6/2018"
+output:
+  word_document: default
+  html_document: default
+---
+
+Problem 1 
+
+```{r}
+library(readxl)
+Girder_Data <- read_excel("/Users/user/Desktop/project/Girder Data.xlsx")
+View(Girder_Data)
+Gdat = stack(Girder_Data)
+block = rep(c("b1","b2","b3","41","b5","b6","b7","b8","b9"),4)
+Gdat = cbind(Gdat,block)
+plot(lm(values~ind+block,data=Gdat))
+summary(lm(values~ind+block,data=Gdat))
+```
+
+## Looking the first plot ("Residuals vs Fitted"), we can check that the red line 
+## is not contant and the residuals cannot be represented as normal distribution 
+## because the dots on the graph are not linearly connected in the second plot ("Normal Q-Q")
+
+Problem 2
+
+```{r}
+TukeyHSD(aov(values~ind+block,data=Gdat),conf.level=0.99)$ind
+```
+
+## Compared to the result from in Section 3.2 at the 0.05 level, Tukey multiple comparisons at the 
+## 0.01 level for the girder experiment have different intervals. Although p-adjusted values are not changed, each multiple comparison
+## intervals are more extended than those at the 0.05 level.
+
+# Problem 3
+
+(a)
+
+lock_df = 3-1 = 2 
+block_MSS = 520/(3-1)= 260 
+Trt_df = 5-1 = 4 
+Trt_MSS = 498/(5-1) = 124.5 
+Res_df = (3-1)(5-1)
+Res_MSS = 40/8 = 5
+
+# If design is not balanced, we cannot complete the ANOVA table
+
+```{r}
+my_tukey_block <- function(mean_1,mean_2,n_1,n_2,sigma_hat,df1,df2,alpha=0.01) {
+diff = mean_2-mean_1
+len = qtukey(p=1-alpha, nmeans=df1, df=df2)/sqrt(2)*sigma_hat*sqrt(1/n_1+1/n_2)
+return(c(diff,diff-len,diff+len)) 
+}
+
+my_mean = c(45,58,46,45,56)
+sigma_hat = sqrt(5)
+b=3
+k=5
+tukey_result = matrix(0,10,3)
+count=1
+for(i in 1:4){
+  for(j in (i+1):5){
+    tukey_result[count,] = my_tukey_block(my_mean[i],my_mean[j],b,b,sigma_hat,k,(b-1)*(k-1))
+    count = count+1
+  }
+  
+}
+```
+###
+(a)
+```{r}
+b=3
+t=5
+n=15
+ssb=520
+sst=498
+sse=40
+sst=ssb+sst+sse
+dft=t-1
+dfb=b-1
+dfe=n-t-b+1
+mst=sst/dft
+msb=ssb/dfb
+mse=sse/dfe
+
+df=c(dfb,dft,dfe,"14")
+ss=c(ssb,sst,sse,sst)
+ms=c(msb,mst,mse," ")
+ano=cbind(df,ss,ms)
+```
+(b)
+
+```{r}
+tukeyblock=function(mean.1,mean.2,n.1,n.2,sighat,df1,df2,alpha=0.01){
+  diff=mean.2-mean.1
+  len=qtukey(p=1-alpha,nmeans=df1,df=df2)/sqrt(2)*sighat*sqrt(1/n.1+1/n.2)
+  return(c(diff,diff-len,diff+len))
+}
+mn=matrix(c(45,58,46,45,56))
+sigmahat=sqrt(5)
+b=3
+k=5
+tukey_result=matrix(0,10,3)
+count=1
+for(i in 1:4){
+  for(j in (i+1):5){
+    tukey_result[count,]=tukeyblock(mn[i],mn[j],b,b,sigmahat,k,(b-1)*(k-1))
+    count=count+1
+  }
+  
+}
+tukey_result
+sig=sqrt(40)
+b=3
+tt=matrix(numeric(0),nrow=5,ncol=5)
+ttt=abs(qt(0.01/(6*2),8))
+for(i in 1:4){
+  for(j in (i+1):5){
+    tt[j,i]=(mn[j,1]-mn[i,1])/(sig*sqrt(2/b))
+    tt[i,i]=0
+  }
+}
+tt
+for(i in 1:4){
+  for(j in (i+1):5){
+    if(tt[j,i]<ttt){
+      tt[j,i]=0
+    }
+  }
+}
+tt
+cat("By looking at the chart, we could not find the pair that has bigger t statistic than our critical value 4.6308")
+```
+
+
+###
+
+# Problem 4
+
+```{r}
+library(readxl)
+Chemical_Reaction_Experiment <- read_excel("/Users/user/Desktop/project/Chemical Reaction Experiment.xlsx")
+View(Chemical_Reaction_Experiment)
+```
+
+(a)
+
+### As the chemical reaction experiment was carried out into two different portions
+### to catalyst A and B, we need to use paired group test
+
+(b)
+```{r}
+catalyst_A =c(9,19,28,22,18,8) 
+catalyst_B =c(10,22,30,21,23,12)
+t = t.test(catalyst_B, catalyst_A, paired=TRUE, alt = "greater",conf.level = 0.05)
+L=length(catalyst_A)
+d=numeric(length(catalyst_A))
+for(i in 1:length(catalyst_A)){
+  d[i]=catalyst_B[i]-catalyst_A[i]
+}
+mean.d=mean(d)
+d2=numeric(length(catalyst_A))
+for(i in 1:length(catalyst_A)){
+  d2[i]=(d[i]-mean.d)^2
+}
+sigma.d=sqrt(sum(d2)/(L-1))
+tt=mean.d/sigma.d*(sqrt(L))
+tt
+```
+(c)
+```{r}
+Confidence.int=c(mean.d-(abs(qt(0.025,11))*(sigma.d)),mean.d+(abs(qt(0.025,11))*(sigma.d)))
+Confidence.int
+```
+# Problem 5
+
+
+
+# Problem 6
+
+```{r}
+y11 = c(20,16,17,18,15,16,19,14,15,24)
+y12 = c(26,40,28,38,38,30,26,38,45,38)
+y13 = c(25,40,30,17,16,45,49,33,30,20)
+y21 = c(24,18,17,17,15,23,14,18,12,11)
+y22 = c(32,22,30,35,32,28,27,28,30,30)
+y23 = c(10,13,17,16,15,14,11,14,15,16)
+
+s11 = log(var(y11))
+s12 = log(var(y12))
+s13 = log(var(y13))
+s21 = log(var(y21))
+s22 = log(var(y22))
+s23 = log(var(y23))
+
+y = c(s11,s12,s13,s21,s22,s23)
+x1 = c(rep("Bolt",3),rep("Mandrel",3))
+x2 = rep(c("CW","HT","PO"),2)
+summary(aov(lm(y~x1+x2)))
+```
+
+
