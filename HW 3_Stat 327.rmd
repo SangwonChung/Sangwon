@@ -1,0 +1,212 @@
+---
+title: "HW 3"
+author: "Sangwon Chung"
+date: "2018/May/3"
+output: html_document
+---
+
+Name: Sangwon Chung
+
+Email: schung59@wisc.edu
+
+```{r}
+if (!require("parallel")) {
+  install.packages("parallel") 
+  stopifnot(require("parallel")) 
+}
+if (!require("png")) {
+  install.packages("png") 
+  stopifnot(require("png")) 
+}
+if (!require("knitr")) {
+  install.packages("knitr") 
+  stopifnot(require("knitr")) 
+}
+
+```
+
+# 1. Implement a parallel mean filter for image smoothing
+
+```{r}
+
+pad = function(object, k = 1){
+  mat = matrix(0, dim(object)[1]+2*k, dim(object)[2]+2*k)
+  mat[(k+1):(dim(object)[1]+k), (k+1):(dim(object)[2]+k)] <- object
+  m = mat
+  row = dim(object)[1]
+  col = dim(object)[2]
+  for(i in (k+1):(row+k)){
+    for (j in (k+1):(col+k)){
+      a <- apply(mat[(i-k):(i+k),(j-k):(j+k)], 2, sum)
+      m[i,j] <- sum(a)/(2*k+1)^2
+      
+    }
+  }
+  padding = m[(k+1):(dim(object)[1]+k), (k+1):(dim(object)[2]+k)]
+  return(padding)
+}
+
+```
+
+
+
+```{r}
+vg <- readPNG("Van_Gogh.png")
+str(vg)
+dim(vg)
+library(parallel)
+red.vg <- vg[,,1]
+green.vg <- vg[,,2]
+blue.vg <- vg[,,3]
+
+vg.l = list("red" = red.vg, "green" = green.vg, "blue" = blue.vg)
+dim(vg.l)
+n.cores = detectCores() 
+cluster = makePSOCKcluster(names=n.cores)
+cluster.3 = makePSOCKcluster(names=3)
+
+k1 <- parLapply(cl=cluster.3, X = vg.l, fun = pad, k=1)
+k3 <- parLapply(cl=cluster.3, X = vg.l, fun = pad, k=3)
+k5 <- parLapply(cl=cluster.3, X = vg.l, fun = pad, k=5)
+
+pal1 <- array(data = c(k1$red, k1$green, k1$blue), dim=dim(vg))
+pal3 <- array(data = c(k3$red, k3$green, k3$blue), dim=dim(vg))
+pal5 <- array(data = c(k5$red, k5$green, k5$blue), dim=dim(vg))
+
+writePNG(image = pal1, target = 'JiHwan_1.png')
+writePNG(image = pal3, target = 'JiHwan_3.png')
+writePNG(image = pal5, target = 'JiHwan_5.png')
+
+```
+
+
+- Implementation of K=1
+![alt text](JiHwan_1.png)
+- Implementation of K=3
+![alt text](JiHwan_3.png)
+- Implementation of K=5
+![alt text](JiHwan_5.png)
+
+# 2. Detect edges
+```{r}
+pad.SD = function(object, k = 1, percent=0.90){
+  mat = matrix(0, dim(object)[1]+2*k, dim(object)[2]+2*k)
+  mat[(k+1):(dim(object)[1]+k), (k+1):(dim(object)[2]+k)] <- object
+  m = mat
+  row = dim(object)[1]
+  col = dim(object)[2]
+  for(i in (k+1):(row+k)){
+    for (j in (k+1):(col+k)){
+      m[i,j] <- sd(mat[(i-k):(i+k),(j-k):(j+k)])
+    }
+  }
+  r = m[(k+1):(dim(object)[1]+k), (k+1):(dim(object)[2]+k)]
+  q = quantile(x = r, probs = percent )
+  edge = (r >= q)
+  return(edge)
+}
+```
+
+
+Find edges in the Van Gogh painting. What feature of the painting is emphasized by edges from the red channel?
+```{r}
+
+van.90 <- parLapply(cl=cluster.3, X = vg.l, fun = pad.SD) 
+
+edge90.van <- vg
+
+for(i in 1:3){
+  t <- edge90.van[,,i]
+  t[van.90$red|van.90$green|van.90$blue] <- 1
+  edge90.van[,,i] <- t
+}
+
+image(t(edge90.van[dim(edge90.van)[1]:1,,1]), col = gray((1:12)/13),  main="Red channel (Top 10%)") 
+```
+
+** The red channel is useful to find the edges of the sky **
+  
+  
+```{r}
+par(mfrow=c(1,3)) 
+image(t(edge90.van[dim(edge90.van)[1]:1,,1]), col = gray((1:12)/13),  main="Red channel (Top 10%)") 
+image(t(edge90.van[dim(edge90.van)[1]:1,,2]), col = gray((1:12)/13),  main="Green channel (Top 10%)") 
+image(t(edge90.van[dim(edge90.van)[1]:1,,3]), col = gray((1:12)/13), main="Blue channel (Top 10%)") 
+
+writePNG(image = edge90.van, target = 'Edge90_vg.png') 
+```
+
+- Edge finding with all channels
+![alt text](edge90_vg.png)
+
+
+
+```{r}
+van.99 <- parLapply(cl=cluster.3, X = vg.l, fun = pad.SD, percent=0.99) 
+
+edge99.van <- vg
+
+for(i in 1:3){
+  t <- edge99.van[,,i]
+  t[van.99$red|van.99$green|van.99$blue] <- 1
+  edge99.van[,,i] <- t
+}
+
+par(mfrow=c(1,3))
+image(t(edge99.van[dim(edge99.van)[1]:1,,1]), col = gray((1:12)/13),  main="Red channel (Top 1%)")
+image(t(edge99.van[dim(edge99.van)[1]:1,,2]), col = gray((1:12)/13),  main="Green channel (Top 1%)")
+image(t(edge99.van[dim(edge99.van)[1]:1,,3]), col = gray((1:12)/13),  main="Blue channel (Top 1%)")
+
+writePNG(image = edge99.van, target = 'Edge99_vg.png')
+
+```
+
+
+- Edge finding with all channels, p=0.99
+![alt text](edge99_vg.png)
+
+Find edges in the Madison photo. What feature is emphasized?
+  
+```{r}
+madison <- readPNG("Madison.png") 
+
+ml = list("red" = madison[,,1],"green" = madison[,,2],"blue" = madison[,,3])
+
+madison90 <- parLapply(cl=cluster.3, X = ml, fun = pad.SD) 
+
+edge90.madison <- madison
+
+for(i in 1:3){
+  t <- edge90.madison[,,i]
+  t[madison90$red|madison90$green|madison90$blue] <- 1
+  edge90.madison[,,i] <- t
+}
+
+writePNG(image = edge90.madison,target = 'Edge90m.png')
+```
+
+
+- Edge finding of madison picture, p=0.90
+![alt text](edge90m.png)
+
+** Boundaries of roads and buildings are emphasized** 
+  
+  
+```{r}
+madison99 <- parLapply(cl=cluster.3, X = ml, fun = pad.SD, percent=0.99) 
+
+edge99.madison <- madison
+
+for(i in 1:3){
+  t <- edge99.madison[,,i]
+  t[madison90$red|madison90$green|madison90$blue] <- 1
+  edge99.madison[,,i] <- t
+}
+
+writePNG(image = edge99.madison,target = 'Edge99madison.png')
+
+```
+
+- Edge finding of madison picture, p=0.99
+![alt text](edge99m.png)
+
