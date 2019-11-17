@@ -1,0 +1,251 @@
+---
+title: "Untitled"
+author: "Sangwon Chung"
+date: "12/2/2018"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+```{r}
+yelp <- read.csv("Yelp_train.csv")
+yelp_t <- read.csv("Yelp_test.csv")
+yelp_validate <- read.csv("Yelp_validate.csv")
+yelp_test <- rbind(yelp_t,yelp_validate)
+options(digits=5) #these options are just for output aesthetic
+options(scipen=4)
+yelp <- yelp[,-1] #remove useless column
+yelp_test <- yelp_test[,-1]
+yelp$text <- as.character(yelp$text)
+yelp_test$text <- as.character(yelp_test$text)
+yelp$categories <- as.character(yelp$categories)
+yelp_test$categories <- as.character(yelp_test$categories)
+yelp$date <- as.Date(yelp$date) 
+yelp_test$date <- as.Date(yelp_test$date)
+#make sure variables are in the correct form
+{
+meanscore <- rep(0,5)
+names(meanscore) <- 1:5
+for (i in 1:5) meanscore[i] <- mean(yelp$sentiment[yelp$stars==i])
+barplot(meanscore, xlab='Stars', ylab="Average sentiment score")
+#this piece looks at how sentiment correlates with stars
+}
+{
+library(stringr)
+new_words <- c("manager","minutes","waitress","waiter","bill","attitude","apology","mistake","love","great","delicious","dope")
+new_X <- matrix(0, nrow(yelp), length(new_words))
+colnames(new_X) <- new_words
+for (i in 1:length(new_words)){
+  new_X[,i] <- str_count(yelp$text, regex(new_words[i], ignore_case=T)) # ignore the upper/lower case in the text
+}
+plotWordStar <- function(stars, wordcount, wordname){
+  meancount <- rep(0,5)
+  names(meancount) <- 1:5
+  for (i in 1:5)    meancount[i] <- mean(wordcount[stars==i])
+  barplot(meancount, main=wordname, xlab="Stars", ylab="Average word count")
+}
+par(mfrow=c(3,4))
+for (i in 1:length(new_words)){
+  plotWordStar(yelp$stars, new_X[,i], colnames(new_X)[i])
+}
+#this section looks at the first group of words and how they correlate with stars
+#the words that look adequately monotonically strictly increasing and linear are
+#manager, minutes, waitress, waiter, bill, attitude, apology, mistake, love, great, delicious
+}
+{
+library(stringr)
+new_words <- c("useful","funny","cool","gem","incredible","divine","perfection","phenomenal","die",
+               "heaven","highly","heavenly")
+new_X <- matrix(0, nrow(yelp), length(new_words))
+colnames(new_X) <- new_words
+for (i in 1:length(new_words)){
+  new_X[,i] <- str_count(yelp$text, regex(new_words[i], ignore_case=T)) # ignore the upper/lower case in the text
+}
+plotWordStar <- function(stars, wordcount, wordname){
+  meancount <- rep(0,5)
+  names(meancount) <- 1:5
+  for (i in 1:5)    meancount[i] <- mean(wordcount[stars==i])
+  barplot(meancount, main=wordname, xlab="Stars", ylab="Average word count")
+}
+par(mfrow=c(3,4))
+for (i in 1:length(new_words)){
+  plotWordStar(yelp$stars, new_X[,i], colnames(new_X)[i])
+}
+#this section looks at the next group of words and how they correlate with stars
+#the words that look adequately monotonically strictly increasing and linear are
+#incredible, divine, perfection, phenominal,heavenly, die
+}
+{
+library(stringr)
+new_words <- c("suberb","deliciously","amazing","sourced","delectable","knowledgable","perfect","deliciousness","fantastic","favorites","wonderful","worse")
+new_X <- matrix(0, nrow(yelp), length(new_words))
+colnames(new_X) <- new_words
+for (i in 1:length(new_words)){
+  new_X[,i] <- str_count(yelp$text, regex(new_words[i], ignore_case=T)) # ignore the upper/lower case in the text
+}
+plotWordStar <- function(stars, wordcount, wordname){
+  meancount <- rep(0,5)
+  names(meancount) <- 1:5
+  for (i in 1:5)    meancount[i] <- mean(wordcount[stars==i])
+  barplot(meancount, main=wordname, xlab="Stars", ylab="Average word count")
+}
+par(mfrow=c(3,4))
+for (i in 1:length(new_words)){
+  plotWordStar(yelp$stars, new_X[,i], colnames(new_X)[i])
+}
+#this section looks at the next group of words and how they correlate with stars
+#the words that look adequately monotonically strictly increasing and linear are
+#amazing, knowledgable, perfect, fantastic,favorites, wonderful,worse
+}
+{
+library(stringr)
+new_words <- c("gross","apologize","charged","proceeded","ignored","receipt","response","poorly","waste","nasty","terrible","tasteless")
+new_X <- matrix(0, nrow(yelp), length(new_words))
+colnames(new_X) <- new_words
+for (i in 1:length(new_words)){
+  new_X[,i] <- str_count(yelp$text, regex(new_words[i], ignore_case=T)) # ignore the upper/lower case in the text
+}
+plotWordStar <- function(stars, wordcount, wordname){
+  meancount <- rep(0,5)
+  names(meancount) <- 1:5
+  for (i in 1:5)    meancount[i] <- mean(wordcount[stars==i])
+  barplot(meancount, main=wordname, xlab="Stars", ylab="Average word count")
+}
+par(mfrow=c(3,4))
+for (i in 1:length(new_words)){
+  plotWordStar(yelp$stars, new_X[,i], colnames(new_X)[i])
+}
+#this section looks at the next group of words and how they correlate with stars
+#the words that look adequately monotonically strictly increasing and linear are
+#gross, apologize, charged, proceeded, ignored, receipt, response, waste, nasty, terrible, tasteless
+}
+{
+library(stringr)
+new_words <- c("inedible", "rude", "awful", "horrible", "apology", "disgusting", "worst")
+new_X <- matrix(0, nrow(yelp), length(new_words))
+colnames(new_X) <- new_words
+for (i in 1:length(new_words)){
+  new_X[,i] <- str_count(yelp$text, regex(new_words[i], ignore_case=T)) # ignore the upper/lower case in the text
+}
+plotWordStar <- function(stars, wordcount, wordname){
+  meancount <- rep(0,5)
+  names(meancount) <- 1:5
+  for (i in 1:5)    meancount[i] <- mean(wordcount[stars==i])
+  barplot(meancount, main=wordname, xlab="Stars", ylab="Average word count")
+}
+par(mfrow=c(3,4))
+for (i in 1:length(new_words)){
+  plotWordStar(yelp$stars, new_X[,i], colnames(new_X)[i])
+}
+#this section looks at the next group of words and how they correlate with stars
+#the words that look adequately monotonically strictly increasing and linear are\
+#inedible, rude, awful, horrible, apology, disgusting, worst
+}
+{
+par(mfrow=c(1,1))
+plot(range(yelp$nword), c(0,0.011), main="Distribution of nword", xlab="Number of Words", ylab="Frequency", type='n')
+colpalette <- c("red","orange","green","turquoise","blue")
+for (i in 1:5){
+  subsamples <- yelp$stars==i
+  d <- density(yelp$nword[subsamples])
+  lines(d, col=colpalette[i])
+}
+legend("topright",legend=levels(factor(yelp$stars)), fill=c("red","orange","green","turquoise","blue"))
+#this section checks if number of words is useful but it is not strictly 
+#monotonically increasing
+}
+{
+library(stringr)
+new_words <- c("mediocre","overpriced","disappointing","bland","poor","dirty","soggy","overcooked","sorry","sad","barely","dry")
+new_X <- matrix(0, nrow(yelp), length(new_words))
+colnames(new_X) <- new_words
+for (i in 1:length(new_words)){
+  new_X[,i] <- str_count(yelp$text, regex(new_words[i], ignore_case=T)) # ignore the upper/lower case in the text
+}
+plotWordStar <- function(stars, wordcount, wordname){
+  meancount <- rep(0,5)
+  names(meancount) <- 1:5
+  for (i in 1:5)    meancount[i] <- mean(wordcount[stars==i])
+  barplot(meancount, main=wordname, xlab="Stars", ylab="Average word count")
+}
+par(mfrow=c(3,4))
+for (i in 1:length(new_words)){
+  plotWordStar(yelp$stars, new_X[,i], colnames(new_X)[i])
+}
+#this section looks at the next group of words and how they correlate with stars
+#the words that look adequately monotonically strictly increasing and linear are\
+#barely, dirty, poor, and sorry
+}
+{
+library(stringr)
+new_words <- c("money","unfortunately","frozen","ok","outstanding","awesome","excellent","glad","highly","best","reasonable","thank")
+new_X <- matrix(0, nrow(yelp), length(new_words))
+colnames(new_X) <- new_words
+for (i in 1:length(new_words)){
+  new_X[,i] <- str_count(yelp$text, regex(new_words[i], ignore_case=T)) # ignore the upper/lower case in the text
+}
+plotWordStar <- function(stars, wordcount, wordname){
+  meancount <- rep(0,5)
+  names(meancount) <- 1:5
+  for (i in 1:5)    meancount[i] <- mean(wordcount[stars==i])
+  barplot(meancount, main=wordname, xlab="Stars", ylab="Average word count")
+}
+par(mfrow=c(3,4))
+for (i in 1:length(new_words)){
+  plotWordStar(yelp$stars, new_X[,i], colnames(new_X)[i])
+}
+#this section looks at the next group of words and how they correlate with stars
+#the words that look adequately monotonically strictly increasing and linear are\
+#money, outstanding, awesome, excellent, glad, best
+}
+
+library(stringr)
+add <- c("manager", "minutes", "waitress", "waiter", "bill", "attitude", "mistake", "love", "great", "delicious","barely","dirty","poor","money","favorite","money","awesome","excellent","glad","outstanding","frozen","sorry")
+add_X <- matrix(0, nrow(yelp), length(add))
+add_X_2 <- matrix(0,nrow(yelp_test), length(add))
+colnames(add_X) <- add
+colnames(add_X_2) <- add
+for (i in 1:length(add)){
+  add_X[,i] <- str_count(yelp$text, regex(add[i], ignore_case=T)) # ignore the upper/lower case in the text
+}
+for (i in 1:length(add)){
+  add_X_2[,i] <- str_count(yelp_test$text, regex(add[i], ignore_case=T)) # ignore the upper/lower case in the text
+}
+yelp_2 <- cbind(yelp,add_X)
+yelp_test_2 <- cbind(yelp_test, add_X_2)
+#this section adds the new words to the dataset with column names
+
+regression_data <- yelp_2[,c(2,12,15:20,26,29,31,32:42,44:65)]
+test_data <- yelp_test_2[,c(11,14:19,25,28,30,31:41,43:64)]
+#this sectionchooses the data to use for the regression by removing everything else
+
+Xmat <- as.matrix(regression_data[,-1])
+Xmat_2 <- as.matrix(test_data)
+Ymat <- regression_data[,1]
+library(glmnet)
+yelp.ridge.cv <- cv.glmnet(Xmat, Ymat, alpha=0, nfold=5)
+yelp.ridge.cv$lambda.min
+coef(yelp.ridge.cv, s = "lambda.min")
+#ridge regression, choosing lambda by cross-validation
+
+predictions <- predict(yelp.ridge.cv, newx = Xmat_2, s = "lambda.min")
+star_out <- data.frame(Id=yelp_test$Id, Expected=predictions)
+write.csv(star_out, file='Will_submission.csv', row.names=FALSE)
+first <- lm(stars~.,data=regression_data)
+summary(first)
+plot(first)
+
+plot(first, which=4, cook.levels=cutoff)
+#this section makes the regression
+AIC(first)
+stopifnot(all.equal(AIC(first),
+                    AIC(logLik(first))))
+BIC(first)
+
+lm2 <- update(first, . ~ . -Examination)
+AIC(first, lm2)
+BIC(first, lm2)
+
+```
+
