@@ -1,0 +1,71 @@
+---
+title: "Stat 456 Hw3"
+author: "Sangwon Chung"
+date: "10/29/2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+#3
+```{r}
+std<-1:14
+exam1<-c(46,31,43,43,47,51,40,48,27,50,31,49,44,43)
+exam2<-c(55,26,55,42,44,52,40,54,26,52,30,44,54,42)
+exam3<-c(67,30,81,61,52,66,45,54,9,77,5,48,77,56)
+X<-data.frame("exam1"=exam1,"exam2"=exam2,"exam3"=exam3)
+X<-matrix(c(exam1,exam2,exam3),ncol=3,nrow = 14)
+D<-c(sum((exam1-mean(exam1))^2),sum((exam2-mean(exam2))^2),sum((exam3-mean(exam3))^2))
+H<-diag(1,14)-rep(1,14)%*%t(rep(1,14))/14
+(D<-diag(sqrt(D)));sqrt(sum((H%*%X[,1])^2))
+x<-H%*%X%*%solve(D);eigen(t(x)%*%x)
+(pca<-princomp(X,cor = FALSE));princomp(x,cor=FALSE)
+pca$score;x%*%pca$loadings*sqrt(14);pca$loadings
+cor(X);cor(x)
+```
+#a
+```{r}
+std<-1:14
+exam1<-c(46,31,43,43,47,51,40,48,27,50,31,49,44,43)
+exam2<-c(55,26,55,42,44,52,40,54,26,52,30,44,54,42)
+exam3<-c(67,30,81,61,52,66,45,54,9,77,5,48,77,56)
+X<-matrix(c(exam1,exam2,exam3),ncol=3,nrow = 14)
+pca<-princomp(X,cor = FALSE)
+print(pca$loadings)
+summary(pca)
+
+#Notation:
+#Yi for i = 1, 2, 3: the ith principle component;
+#Xi for i = 1, 2, 3: the ith exam grades of students. 
+#Principle Components:
+#Y1 = 0.246X1 + 0.374X2 + 0.894X3
+#Y2 = 0.656X1 + 0.615X2 ??? 0.694X3
+#Y3 = 0.894X1 ??? 0.438X2
+
+#Interpretation:
+
+#Y1: consists of the grades of all three exams with the third one account most, indicating the ability of students in taking exams.
+
+#Y2: the students have higher Y2 do better in the former two exams and get lower grades in the final exam, this is to say, Y2 shows the difference of study condition of students between the first two periods and third period.
+
+#Y3: the students have higher Y3 do better in the first exam than the second exam. It shows the different of study condition of students between the first period and the second period without considering the third period.
+
+
+```
+
+#b
+```{r}
+scores<-pca$scores
+library(ggplot2)
+qplot(scores[,2],scores[,1])+labs(x="PC2",y="PC1")
+```
+#c
+```{r}
+X<-data.frame("exam1"=exam1,"exam2"=exam2,"exam3"=exam3)
+cor(X,scores)
+library(MVA)
+```
+
+
+
+
